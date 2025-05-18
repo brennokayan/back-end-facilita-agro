@@ -1,0 +1,153 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  // output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserType {
+  PRODUTOR
+  CONSUMIDOR
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  emailVerified Boolean?
+  image         String?
+  type          UserType?
+  password      String
+  phone         String
+  address       String
+  city          String
+  state         String
+  country       String
+  birthDate     DateTime?
+  age           Int?
+  nota          Int?
+  isAnalfabete  Boolean?  @default(false)
+  isDelivery    Boolean?  @default(false)
+  products      Product[]
+  pedidos       Pedido[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  isActive      Boolean?  @default(true)
+  isDeleted     Boolean?  @default(false)
+  datePayment   String?
+}
+
+enum unitType {
+  UNIDADE
+  KG
+  LITRO
+  PACOTE
+  CAIXA
+  BOLSA
+  PCT
+  GRAMA
+  METRO
+}
+
+model Product {
+  id              String          @id @default(cuid())
+  name            String?
+  description     String?
+  price           Float?
+  image           String?
+  unit            unitType?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  userId          String?
+  user            User?           @relation(fields: [userId], references: [id])
+  categorie       categoriesType?
+  isActive        Boolean?        @default(true)
+  isDeleted       Boolean?        @default(false)
+  isOrganic       Boolean?        @default(false)
+  isPromo         Boolean?        @default(false)
+  isDestaque      Boolean?        @default(false)
+  isFreteGratuito Boolean?        @default(false)
+  isNovo          Boolean?        @default(false)
+  isMaisVendido   Boolean?        @default(false)
+
+  PedidoItem PedidoItem[]
+}
+
+enum categoriesType {
+  FRUTAS
+  VERDURAS
+  LEGUMES
+  CARNES
+  LATICINIOS
+  PESCADOS
+  EMBUTIDOS
+  CONGELADOS
+  ENLATADOS
+  GRÃOS
+  TEMPEROS
+  CONDIMENTOS
+}
+
+model Pedido {
+  id            String         @id @default(cuid())
+  user          User           @relation(fields: [userId], references: [id])
+  userId        String
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  status        PedidoStatus?  @default(PENDENTE)
+  total         Float?
+  items         PedidoItem[]
+  type          tipoPedido
+  address       String?
+  city          String?
+  state         String?
+  country       String?
+  paymentMethod PaymentMethod
+  paymentStatus PaymentStatus? @default(PENDENTE)
+}
+
+enum PaymentMethod {
+  CARTAO_CREDITO
+  CARTAO_DEBITO
+  DINHEIRO
+  PIX
+  BOLETO
+}
+
+enum tipoPedido {
+  VENDA
+  COMPRA
+}
+
+model PedidoItem {
+  id        String  @id @default(cuid())
+  pedido    Pedido  @relation(fields: [pedidoId], references: [id])
+  pedidoId  String
+  product   Product @relation(fields: [productId], references: [id])
+  productId String
+  quantity  Int
+  unitPrice Float
+}
+
+enum PedidoStatus {
+  PENDENTE
+  CONFIRMADO
+  ENVIADO
+  ENTREGUE
+  CANCELADO
+}
+
+enum PaymentStatus {
+  PENDENTE
+  APROVADO
+  CANCELADO
+}
